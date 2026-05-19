@@ -29,12 +29,15 @@
     },
     "devDependencies": {
         "@vue/compiler-sfc": "^3.2.36",
+        "axios": "^1.16.1",
         "eslint": "^8.16.0",
         "eslint-config-airbnb-base": "^15.0.0",
         "eslint-plugin-vue": "^9.1.0",
         "laravel-mix": "^6.0.44",
         "postcss": "^8.4.14",
         "prettier": "^2.7.1",
-        "vue-loader": "^16.8.3"
+        "vue-loader": "^16.8.3",
+        "vuex": "^4.1.0",
+        "uid": "^2.0.2"
     }
 }

@@ -1,6 +1,6 @@
 <template>
     <DefaultField
-        :field="field"
+        :field="currentField"
         :errors="errors"
         :show-help-text="showHelpText"
         :full-width-content="true"
@@ -8,7 +8,7 @@
     >
         <template #field>
             <div
-                :id="`editor-js-${field.attribute}`"
+                :id="`editor-js-${currentField.attribute}`"
                 ref="input"
                 class="editor-js"
             />
@@ -17,84 +17,94 @@
 </template>
 
 <script>
-import { FormField, HandlesValidationErrors } from 'laravel-nova';
+import { DependentFormField, HandlesValidationErrors } from "laravel-nova";
 
 export default {
-    mixins: [FormField, HandlesValidationErrors],
-
-    props: ['resourceName', 'resourceId', 'field'],
+    mixins: [HandlesValidationErrors, DependentFormField],
 
     methods: {
         /*
-             * Set the initial, internal value for the field.
-             */
+         * Set the initial, internal value for the field.
+         */
         setInitialValue() {
-            this.value = this.field.value;
+            this.value = this.currentField.value;
 
             const self = this;
 
-            const currentContent = (typeof self.field.value === 'object')
-                ? self.field.value
-                : JSON.parse(self.field.value);
+            const currentContent =
+                typeof self.currentField.value === "object"
+                    ? self.currentField.value
+                    : JSON.parse(self.currentField.value);
 
-            const editor = NovaEditorJS.getInstance({
-                /**
-                 * Wrapper of Editor
-                 */
-                holder: `editor-js-${self.field.attribute}`,
-
-                /**
-                 * This Tool will be used as default
-                 */
-                defaultBlock: self.field.editorSettings.initialBlock,
-
-                /**
-                 * Default placeholder
-                 */
-                placeholder: self.field.editorSettings.placeholder,
-
-                /**
-                 * Enable autofocus
-                 */
-                autofocus: self.field.editorSettings.autofocus,
-
-                /**
-                 * Internalization config
-                 */
-                i18n: {
+            const editor = NovaEditorJS.getInstance(
+                {
                     /**
-                     * Text direction. If not set, uses ltr
+                     * Wrapper of Editor
                      */
-                    direction: (self.field.editorSettings.rtl ?? false) ? 'rtl' : 'ltr',
+                    holder: `editor-js-${self.currentField.attribute}`,
+
+                    /**
+                     * This Tool will be used as default
+                     */
+                    defaultBlock: self.currentField.editorSettings.initialBlock,
+
+                    /**
+                     * Default placeholder
+                     */
+                    placeholder: self.currentField.editorSettings.placeholder,
+
+                    /**
+                     * Enable autofocus
+                     */
+                    autofocus: self.currentField.editorSettings.autofocus,
+
+                    /**
+                     * Internalization config
+                     */
+                    i18n: {
+                        /**
+                         * Text direction. If not set, uses ltr
+                         */
+                        direction:
+                            (self.currentField.editorSettings.rtl ?? false)
+                                ? "rtl"
+                                : "ltr",
+                    },
+
+                    /**
+                     * Initial Editor data
+                     */
+                    data: currentContent,
+
+                    /**
+                     * Min height of editor
+                     */
+                    minHeight: 35,
+
+                    onReady() {},
+                    onChange() {
+                        editor.save().then((savedData) => {
+                            self.handleChange(savedData);
+                        });
+                    },
                 },
-
-                /**
-                 * Initial Editor data
-                 */
-                data: currentContent,
-
-                /**
-                 * Min height of editor
-                 */
-                minHeight: 35,
-
-                onReady() {
-
-                },
-                onChange() {
-                    editor.save().then((savedData) => {
-                        self.handleChange(savedData);
-                    });
-                },
-            }, self.field);
+                self.field,
+            );
         },
 
         /**
          * Fill the given FormData object with the field's internal value.
          */
         fill(formData) {
-            const value = typeof this.value === 'string' ? this.value : JSON.stringify(this.value);
-            formData.append(this.field.attribute, value || '');
+            const value =
+                typeof this.value === "string"
+                    ? this.value
+                    : JSON.stringify(this.value);
+            this.fillIfVisible(
+                formData,
+                this.currentField.attribute,
+                value || "",
+            );
         },
 
         /**
