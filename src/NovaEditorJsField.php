@@ -6,9 +6,11 @@ namespace Advoor\NovaEditorJs;
 
 use JsonException;
 use Laravel\Nova\Fields\Field;
+use Laravel\Nova\Fields\SupportsDependentFields;
 
 class NovaEditorJsField extends Field
 {
+    use SupportsDependentFields;
     /**
      * The field's component.
      *
