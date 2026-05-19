@@ -25,7 +25,20 @@ export default {
     data() {
         return {
             editorInstance: null,
+            isMounted: false,
         };
+    },
+
+    mounted() {
+        this.isMounted = true;
+        this.initEditor();
+    },
+
+    beforeUnmount() {
+        if (this.editorInstance) {
+            this.editorInstance.destroy();
+            this.editorInstance = null;
+        }
     },
 
     methods: {
@@ -35,6 +48,12 @@ export default {
         setInitialValue() {
             this.value = this.currentField.value;
 
+            if (this.isMounted) {
+                this.initEditor();
+            }
+        },
+
+        initEditor() {
             const self = this;
 
             this.$nextTick(() => {
