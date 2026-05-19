@@ -22,6 +22,12 @@ import { DependentFormField, HandlesValidationErrors } from "laravel-nova";
 export default {
     mixins: [HandlesValidationErrors, DependentFormField],
 
+    data() {
+        return {
+            editorInstance: null,
+        };
+    },
+
     methods: {
         /*
          * Set the initial, internal value for the field.
@@ -31,65 +37,74 @@ export default {
 
             const self = this;
 
-            const currentContent =
-                typeof self.currentField.value === "object"
-                    ? self.currentField.value
-                    : JSON.parse(self.currentField.value);
+            this.$nextTick(() => {
+                if (self.editorInstance) {
+                    self.editorInstance.destroy();
+                    self.editorInstance = null;
+                }
 
-            const editor = NovaEditorJS.getInstance(
-                {
-                    /**
-                     * Wrapper of Editor
-                     */
-                    holder: `editor-js-${self.currentField.attribute}`,
+                const currentContent =
+                    typeof self.currentField.value === "object"
+                        ? self.currentField.value
+                        : JSON.parse(self.currentField.value);
 
-                    /**
-                     * This Tool will be used as default
-                     */
-                    defaultBlock: self.currentField.editorSettings.initialBlock,
-
-                    /**
-                     * Default placeholder
-                     */
-                    placeholder: self.currentField.editorSettings.placeholder,
-
-                    /**
-                     * Enable autofocus
-                     */
-                    autofocus: self.currentField.editorSettings.autofocus,
-
-                    /**
-                     * Internalization config
-                     */
-                    i18n: {
+                self.editorInstance = NovaEditorJS.getInstance(
+                    {
                         /**
-                         * Text direction. If not set, uses ltr
+                         * Wrapper of Editor
                          */
-                        direction:
-                            (self.currentField.editorSettings.rtl ?? false)
-                                ? "rtl"
-                                : "ltr",
+                        holder: `editor-js-${self.currentField.attribute}`,
+
+                        /**
+                         * This Tool will be used as default
+                         */
+                        defaultBlock:
+                            self.currentField.editorSettings.initialBlock,
+
+                        /**
+                         * Default placeholder
+                         */
+                        placeholder:
+                            self.currentField.editorSettings.placeholder,
+
+                        /**
+                         * Enable autofocus
+                         */
+                        autofocus: self.currentField.editorSettings.autofocus,
+
+                        /**
+                         * Internalization config
+                         */
+                        i18n: {
+                            /**
+                             * Text direction. If not set, uses ltr
+                             */
+                            direction:
+                                self.currentField.editorSettings.rtl ?? false
+                                    ? "rtl"
+                                    : "ltr",
+                        },
+
+                        /**
+                         * Initial Editor data
+                         */
+                        data: currentContent,
+
+                        /**
+                         * Min height of editor
+                         */
+                        minHeight: 35,
+
+                        onReady() {},
+                        onChange() {
+                            self.editorInstance.save().then((savedData) => {
+                                self.handleChange(savedData);
+                            });
+                        },
                     },
-
-                    /**
-                     * Initial Editor data
-                     */
-                    data: currentContent,
-
-                    /**
-                     * Min height of editor
-                     */
-                    minHeight: 35,
-
-                    onReady() {},
-                    onChange() {
-                        editor.save().then((savedData) => {
-                            self.handleChange(savedData);
-                        });
-                    },
-                },
-                self.field,
-            );
+                    self.field
+                );
+            });
         },
 
         /**
@@ -103,7 +118,7 @@ export default {
             this.fillIfVisible(
                 formData,
                 this.currentField.attribute,
-                value || "",
+                value || ""
             );
         },
 
